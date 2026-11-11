@@ -11,5 +11,3 @@ services:
         sync: false
       - key: OPENROUTER_MODEL
         value: deepseek/deepseek-v4.1-flash
-      - key: RAG_K
-        value: "4"
