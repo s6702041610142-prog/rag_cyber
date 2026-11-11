@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: cyber-chatbot
+    runtime: docker
+    plan: free # use 'starter' if the free disk limit (512MB) is too small
+    healthCheckPath: /
+    envVars:
+      - key: OPENROUTER_API_KEY
+        sync: false
+      - key: HF_TOKEN
+        sync: false
+      - key: OPENROUTER_MODEL
+        value: deepseek/deepseek-v4.1-flash
+      - key: RAG_K
+        value: "4"

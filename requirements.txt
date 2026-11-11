@@ -1,0 +1,6 @@
+openai
+fastapi
+uvicorn
+datasets
+pydantic
+chainlit>=2

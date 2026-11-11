@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+.env
+index.pkl
+index.faiss
+.venv/
+venv/
