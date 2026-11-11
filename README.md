@@ -2,7 +2,7 @@
 
 Chatbot ที่ตอบคำถามด้าน **penetration testing / cybersecurity** โดยใช้ข้อมูลจาก
 `Vyber07/cyber-security` (1 ชุดความรู้เชิงลึก ระดับ PhD) ส่งให้โมเดล **DeepSeek-V4.1-Flash**
-ผ่าน **OpenRouter** โดยมี UI เป็น **Gradio** web chat
+ผ่าน **OpenRouter** โดยมี UI เป็น **Chainlit** web chat
 
 > เนื่องจาก dataset นี้เป็นข้อมูลชุดเดียว (ไม่ใช่ Q&A หลายข้อ) จึงส่ง knowledge base
 > ทั้งก้อนให้ LLM ตอบตรง ๆ ไม่จำเป็นต้องทำ FAISS/embedding — เบาและเหมาะกับ Render free.
@@ -10,9 +10,9 @@ Chatbot ที่ตอบคำถามด้าน **penetration testing / cy
 ## โครงสร้างโปรเจกต์
 ```
 ragcyber/
-├── app_gradio.py      # Gradio UI (ตัวหลัก)
+├── app_chainlit.py    # Chainlit UI (ตัวหลัก)
 ├── app.py             # FastAPI JSON API (ทางเลือก, ไม่มี UI)
-├── Dockerfile         # Container definition (รัน Gradio)
+├── Dockerfile         # Container definition (รัน Chainlit)
 ├── requirements.txt
 ├── render.yaml        # Render blueprint (deploy config)
 ├── .env.example      # ตัวอย่าง environment (คัดลอกเป็น .env)
@@ -39,9 +39,9 @@ OPENROUTER_API_KEY=sk-or-xxxx
 ```powershell
 cd C:\kmutnb\chatbot\ragcyber
 pip install -r requirements.txt
-python app_gradio.py
+python -m chainlit run app_chainlit.py --port 8000
 ```
-เปิด browser ที่ `http://localhost:7860` — web chat พร้อม streaming
+เปิด browser ที่ `http://localhost:8000` — web chat พร้อม streaming
 
 หรือใช้ API แบบ JSON (ไม่มี UI):
 ```powershell
@@ -71,3 +71,4 @@ Render → **New → Web Service** → repo เดียวกัน → runtime
 - **Render free plan** disk/CPU จำกัด — ดีที่ไม่ต้อง build index (cut faiss/torch) image เล็กลงมาก
 - ถ้า build ตันเรื่อง disk บน Render ให้เปลี่ยน `plan: free` → `starter` ใน `render.yaml`
 - ห้าม commit `.env` จริง ใช้ Render secret env vars แทน
+- Chainlit ถูก archive (ไม่มีการ update) แต่ยังใช้ได้ดีกับงานนี้

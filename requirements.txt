@@ -3,4 +3,4 @@ fastapi
 uvicorn
 datasets
 pydantic
-gradio>=4
+chainlit>=2
