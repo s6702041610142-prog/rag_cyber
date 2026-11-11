@@ -1,6 +1,5 @@
 """Chainlit UI for the cyber-security knowledge chatbot.
 Run:  chainlit run app_chainlit.py --port 8000
-Uses the same dataset knowledge base + OpenRouter logic as app.py.
 Deployable on Render via Dockerfile (CMD runs chainlit).
 """
 import json
@@ -16,6 +15,15 @@ MODEL = os.environ.get("OPENROUTER_MODEL", "deepseek/deepseek-v4.1-flash")
 
 _knowledge: str | None = None
 
+# ---- Example starter questions shown on the welcome screen ----
+EXAMPLE_STARTERS = [
+    "What is the difference between black box and white box testing?",
+    "List the phases of PTES penetration testing.",
+    "What is a red team engagement?",
+    "Which OWASP testing categories exist?",
+    "What certifications are relevant for web security?",
+]
+
 
 def load_knowledge() -> str:
     from datasets import load_dataset
@@ -30,9 +38,16 @@ async def on_start():
     global _knowledge
     try:
         _knowledge = load_knowledge()
+        greet = (
+            "🛡️ **Cyber Security Assistant**\n\n"
+            f"ยินดีต้อนรับ! Knowledge base โหลดแล้ว ({len(_knowledge):,} chars)\n"
+            "ลองถามคำถามเกี่ยวกับ penetration testing / cybersecurity ด้านล่างได้เลย 👇"
+        )
+        await cl.Message(content=greet).send()
+        # Show clickable example starters
         await cl.Message(
-            content=f"✅ Knowledge base loaded ({len(_knowledge)} chars).\n"
-                    "Ask me anything about penetration testing / cybersecurity."
+            content="**ตัวอย่างคำถาม:**",
+            actions=[cl.Action(name=f"starter_{i}", value=q, label=q) for i, q in enumerate(EXAMPLE_STARTERS)],
         ).send()
     except Exception as e:
         _knowledge = None
@@ -42,8 +57,43 @@ async def on_start():
         ).send()
 
 
+@cl.action_callback("starter_0")
+async def on_starter0(action: cl.Action):
+    await handle_starter(action)
+
+
+@cl.action_callback("starter_1")
+async def on_starter1(action: cl.Action):
+    await handle_starter(action)
+
+
+@cl.action_callback("starter_2")
+async def on_starter2(action: cl.Action):
+    await handle_starter(action)
+
+
+@cl.action_callback("starter_3")
+async def on_starter3(action: cl.Action):
+    await handle_starter(action)
+
+
+@cl.action_callback("starter_4")
+async def on_starter4(action: cl.Action):
+    await handle_starter(action)
+
+
+async def handle_starter(action: cl.Action):
+    question = action.value
+    await cl.Message(content=question, author="You").send()
+    await answer(question)
+
+
 @cl.on_message
 async def on_message(message: cl.Message):
+    await answer(message.content)
+
+
+async def answer(question: str):
     if not _knowledge:
         await cl.Message(content="Knowledge base not available yet. Try again later.").send()
         return
@@ -60,21 +110,24 @@ async def on_message(message: cl.Message):
         f"{_knowledge}\n"
         "=== END ==="
     )
-    stream = client.chat.completions.create(
-        model=MODEL,
-        messages=[
-            {"role": "system", "content": system},
-            {"role": "user", "content": message.content},
-        ],
-        temperature=0.3,
-        stream=True,
-    )
-    full = ""
-    msg = cl.Message(content="")
-    await msg.send()
-    for chunk in stream:
-        delta = chunk.choices[0].delta.content
-        if delta:
-            full += delta
-            await msg.stream_token(delta)
-    await msg.update()
+    try:
+        stream = client.chat.completions.create(
+            model=MODEL,
+            messages=[
+                {"role": "system", "content": system},
+                {"role": "user", "content": question},
+            ],
+            temperature=0.3,
+            stream=True,
+        )
+        full = ""
+        msg = cl.Message(content="")
+        await msg.send()
+        for chunk in stream:
+            delta = chunk.choices[0].delta.content
+            if delta:
+                full += delta
+                await msg.stream_token(delta)
+        await msg.update()
+    except Exception as e:
+        await cl.Message(content=f"⚠️ Error from model: {e}").send()
