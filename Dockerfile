@@ -4,7 +4,7 @@ FROM python:3.12-slim
 WORKDIR /app
 
 # Secrets come from Render env vars; HF_TOKEN is needed at startup to load the
-# gated dataset (falls back gracefully if missing).
+# gated dataset (script falls back gracefully if missing).
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     && rm -rf /var/lib/apt/lists/*
@@ -14,7 +14,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-EXPOSE 8000
+EXPOSE 7860
 
-# Chainlit app (run it directly as the container command).
-CMD ["chainlit", "run", "app_chainlit.py", "--host", "0.0.0.0", "--port", "8000"]
+# Gradio app with queue (Render uses healthCheckPath /; Gradio serves UI at /).
+CMD ["python", "app_gradio.py"]
