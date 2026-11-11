@@ -44,11 +44,12 @@ async def on_start():
             "ลองถามคำถามเกี่ยวกับ penetration testing / cybersecurity ด้านล่างได้เลย 👇"
         )
         await cl.Message(content=greet).send()
-        # Show clickable example starters
-        await cl.Message(
-            content="**ตัวอย่างคำถาม:**",
-            actions=[cl.Action(name=f"starter_{i}", value=q, label=q) for i, q in enumerate(EXAMPLE_STARTERS)],
-        ).send()
+        # Show clickable example starters (use payload, not value — Action has no 'value' field)
+        actions = [
+            cl.Action(name=f"starter_{i}", payload={"q": q}, label=q)
+            for i, q in enumerate(EXAMPLE_STARTERS)
+        ]
+        await cl.Message(content="**ตัวอย่างคำถาม:**", actions=actions).send()
     except Exception as e:
         _knowledge = None
         await cl.Message(
@@ -58,32 +59,23 @@ async def on_start():
 
 
 @cl.action_callback("starter_0")
-async def on_starter0(action: cl.Action):
-    await handle_starter(action)
-
-
+async def on_starter0(action: cl.Action): await handle_starter(action)
 @cl.action_callback("starter_1")
-async def on_starter1(action: cl.Action):
-    await handle_starter(action)
-
-
+async def on_starter1(action: cl.Action): await handle_starter(action)
 @cl.action_callback("starter_2")
-async def on_starter2(action: cl.Action):
-    await handle_starter(action)
-
-
+async def on_starter2(action: cl.Action): await handle_starter(action)
 @cl.action_callback("starter_3")
-async def on_starter3(action: cl.Action):
-    await handle_starter(action)
-
-
+async def on_starter3(action: cl.Action): await handle_starter(action)
 @cl.action_callback("starter_4")
-async def on_starter4(action: cl.Action):
-    await handle_starter(action)
+async def on_starter4(action: cl.Action): await handle_starter(action)
 
 
 async def handle_starter(action: cl.Action):
-    question = action.value
+    # Action has no 'value' field; the question is carried in payload dict.
+    question = action.payload.get("q") if isinstance(action.payload, dict) else str(action.payload)
+    if not question:
+        await cl.Message(content="⚠️ Invalid starter action.").send()
+        return
     await cl.Message(content=question, author="You").send()
     await answer(question)
 
